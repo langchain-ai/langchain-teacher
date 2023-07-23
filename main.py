@@ -44,7 +44,7 @@ if prompt := st.chat_input():
 
     with st.chat_message("assistant"):
         stream_handler = StreamHandler(st.empty())
-        model = ChatOpenAI(streaming=True, callbacks=[stream_handler])
+        model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-4")
         chain = LLMChain(prompt=prompt_template, llm=model)
 
         response = chain.run(input=prompt, chat_history=st.session_state.messages)
