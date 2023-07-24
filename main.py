@@ -2,6 +2,8 @@ from langchain.callbacks.base import BaseCallbackHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import ChatMessage
 import streamlit as st
+from langsmith import Client
+client = Client()
 
 
 class StreamHandler(BaseCallbackHandler):
@@ -33,6 +35,9 @@ prompt_template = ChatPromptTemplate(messages = [SystemMessage(content=template)
 
 from langchain.chains import LLMChain
 
+def send_feedback(run_id, score):
+    client.create_feedback(run_id, "user_score", score=score)
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = [ChatMessage(role="assistant", content="Welcome to the class on LangChain! Before doing this, you should have a Python environment set up. Do you have that done?")]
 
@@ -47,6 +52,16 @@ if prompt := st.chat_input():
         model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-4")
         chain = LLMChain(prompt=prompt_template, llm=model)
 
-        response = chain.run(input=prompt, chat_history=st.session_state.messages)
+        response = chain({"input":prompt, "chat_history":st.session_state.messages}, include_run_info=True)
         st.session_state.messages.append(ChatMessage(role="user", content=prompt))
-        st.session_state.messages.append(ChatMessage(role="assistant", content=response))
+        st.session_state.messages.append(ChatMessage(role="assistant", content=response[chain.output_key]))
+        run_id = response["__run"].run_id
+
+        col_text, col1, col2 = st.columns([8,1,1])
+
+        with col1:
+            st.button("👍", on_click=send_feedback, args=(run_id, 1))
+
+        with col2:
+            st.button("👎", on_click=send_feedback, args=(run_id, 0))
+
