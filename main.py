@@ -6,6 +6,19 @@ from langsmith import Client
 client = Client()
 
 
+
+st.set_page_config(page_title="LangChain: Getting Started Class", page_icon="🦜")
+st.title("🦜 LangChain: Getting Started Class")
+button_css =""".stButton>button {
+    color: #4F8BF9;
+    border-radius: 50%;
+    height: 2em;
+    width: 2em;
+    font-size: 4px;
+}"""
+st.markdown(f'<style>{button_css}</style>', unsafe_allow_html=True)
+
+
 class StreamHandler(BaseCallbackHandler):
     def __init__(self, container, initial_text=""):
         self.container = container
@@ -41,7 +54,7 @@ def send_feedback(run_id, score):
     client.create_feedback(run_id, "user_score", score=score)
 
 if "messages" not in st.session_state:
-    st.session_state["messages"] = [AIMessage(content="Welcome to the class on LangChain! Before doing this, you should have a Python environment set up. Do you have that done?")]
+    st.session_state["messages"] = [AIMessage(content="Welcome! This short course with help you started with LangChain, and will cover LLMs, prompts, output parsers, and LLMChains.Before doing this, you should have a Python environment set up. Do you have that done?")]
 
 for msg in st.session_state["messages"]:
     if isinstance(msg, HumanMessage):
@@ -62,7 +75,9 @@ if prompt := st.chat_input():
         st.session_state.messages.append(AIMessage(content=response[chain.output_key]))
         run_id = response["__run"].run_id
 
-        col_text, col1, col2 = st.columns([8,1,1])
+        col_blank, col_text, col1, col2 = st.columns([10, 2,1,1])
+        with col_text:
+            st.text("Feedback:")
 
         with col1:
             st.button("👍", on_click=send_feedback, args=(run_id, 1))
