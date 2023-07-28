@@ -44,7 +44,10 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = [AIMessage(content="Welcome to the class on LangChain! Before doing this, you should have a Python environment set up. Do you have that done?")]
 
 for msg in st.session_state["messages"]:
-    st.chat_message(msg.role).write(msg.content)
+    if isinstance(msg, HumanMessage):
+        st.chat_message("user").write(msg.content)
+    else:
+        st.chat_message("assistant").write(msg.content)
 
 if prompt := st.chat_input():
     st.chat_message("user").write(prompt)
