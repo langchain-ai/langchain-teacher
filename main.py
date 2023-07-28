@@ -1,6 +1,6 @@
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.chat_models import ChatOpenAI
-from langchain.schema import ChatMessage
+from langchain.schema import HumanMessage, AIMessage
 import streamlit as st
 from langsmith import Client
 client = Client()
@@ -28,6 +28,8 @@ from langchain.memory import ConversationBufferMemory
 template = """The below is a "Getting Started" guide for LangChain. You are an expert educator, and are responsible for walking the user through this getting started guide. You should make sure to guide them along, encouraging them to progress when appropriate. If they ask questions not related to this getting started guide, you should politely decline to answer and resume trying to teach them about LangChain!
 
 Please limit any responses to only one concept or step at a time. Make sure they fully understand that before moving on to the next. This is an interactive lesson - do not lecture them, but rather engage and guide them along!
+
+When they have finished the guide, congragulate them and tell them to move onto the next section.
 -----------------
 {content}""".format(content=guide)
 
@@ -39,7 +41,7 @@ def send_feedback(run_id, score):
     client.create_feedback(run_id, "user_score", score=score)
 
 if "messages" not in st.session_state:
-    st.session_state["messages"] = [ChatMessage(role="assistant", content="Welcome to the class on LangChain! Before doing this, you should have a Python environment set up. Do you have that done?")]
+    st.session_state["messages"] = [AIMessage(content="Welcome to the class on LangChain! Before doing this, you should have a Python environment set up. Do you have that done?")]
 
 for msg in st.session_state["messages"]:
     st.chat_message(msg.role).write(msg.content)
@@ -52,9 +54,9 @@ if prompt := st.chat_input():
         model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-4")
         chain = LLMChain(prompt=prompt_template, llm=model)
 
-        response = chain({"input":prompt, "chat_history":st.session_state.messages}, include_run_info=True)
-        st.session_state.messages.append(ChatMessage(role="user", content=prompt))
-        st.session_state.messages.append(ChatMessage(role="assistant", content=response[chain.output_key]))
+        response = chain({"input":prompt, "chat_history":st.session_state.messages[-20:]}, include_run_info=True)
+        st.session_state.messages.append(HumanMessage(content=prompt))
+        st.session_state.messages.append(AIMessage(content=response[chain.output_key]))
         run_id = response["__run"].run_id
 
         col_text, col1, col2 = st.columns([8,1,1])
