@@ -1,0 +1,124 @@
+## First part: general understanding
+
+The LangChain Expression Language allows you to easily create chains of different components like prompts, models, retrievers, etc. This is a new type of way to contruct chains. There are two main benefits: a standard interface and easying piping.
+
+### Standard Interface
+
+All chains constructed this way will come with built in batch, async and streaming support.
+
+### Easying piping
+
+You can easily combine these chains together by using the `|` Operator
+
+## Next: Creating a Simple Chain
+
+### Import standard things
+
+These are the same LangChain constructs we know
+
+```python
+from langchain.prompts import ChatPromptTemplate  
+from langchain.chat_models import ChatOpenAI  
+```
+
+### Setup
+
+Lets make a chain that takes in a topic and makes a joke.
+We can do this by combining a PromptTemplate with a ChatModel.
+Let's initialize those by themselves
+
+```python
+model = ChatOpenAI()  
+prompt = ChatPromptTemplate.from_template("tell me a joke about {topic}")  
+```
+
+### Pipe
+
+We can now chain those together with the `|` operator
+
+```python
+chain = prompt | model 
+```
+
+### Call
+
+We can now call this with `.invoke`. We pass in a dictionary, because that's what PromptTemplate expects.
+
+```python 
+chain.invoke({"topic": "bears"})  
+```
+
+### Stream
+
+Show code for this, explain why its useful
+
+### Batch
+
+Show code for this, explain why its useful
+
+### Async
+
+Show code for this, how to call async (only show `.ainvoke` but tell them it exists for `astream` and `abatch`)
+
+
+## Output Parsers
+
+The above chain returns a ChatMessage.
+Often times it's more workable to work with strings.
+We can use `StrOutputParser` to do that.
+Check with them that this makes sense
+
+### Show example of how to add in `StrOutputParser` and run
+
+```python
+from langchain.schema.output_parser import StrOutputParser  
+chain = prompt | model | StrOutputParser()  
+chain.invoke({"foo": "bears"})  
+```
+
+## More complicated chains
+
+You can combine this knowledge over and over again to create more complicated chains.
+Let's go over one final example - how to do retrieval QA.
+
+### Set up the retriever
+
+```python
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.schema.runnable import RunnablePassthrough
+
+# Create the retriever
+vectorstore = Chroma.from_texts(["harrison worked at kensho"], embedding=OpenAIEmbeddings())
+retriever = vectorstore.as_retriever()
+```
+
+### Set up the prompt template
+
+```python
+template = """Answer the question based only on the following context:
+{context}
+
+Question: {question}
+"""
+prompt = ChatPromptTemplate.from_template(template)
+```
+
+### Create the chain
+
+```python
+chain = (
+    {"context": retriever, "question": RunnablePassthrough()} 
+    | prompt 
+    | model 
+    | StrOutputParser()
+)
+```
+
+### Run the chain
+
+Show code for this
+
+## Conclusion
+
+That's it! Excellent job. Check out https://python.langchain.com/docs/guides/expression_language/cookbook for more info.
