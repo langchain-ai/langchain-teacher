@@ -87,8 +87,8 @@ if prompt := st.chat_input():
 
     with st.chat_message("assistant"):
         stream_handler = StreamHandler(st.empty())
-        model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-4")
-        #model = ChatAnthropic(streaming=True, callbacks=[stream_handler], model="claude-2")
+        #model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-4")
+        model = ChatAnthropic(streaming=True, callbacks=[stream_handler], model="claude-2")
         chain = LLMChain(prompt=prompt_template, llm=model)
 
         response = chain({"input":prompt, "chat_history":st.session_state.messages[-20:]}, include_run_info=True)
