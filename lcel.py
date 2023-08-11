@@ -1,3 +1,4 @@
+import langchain
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.chat_models import ChatOpenAI, ChatAnthropic
 from langchain.schema import HumanMessage, AIMessage
