@@ -1,0 +1,307 @@
+**Lesson: Understanding Different Memory Types in Langchain**
+
+
+---
+
+### 1. Conversation Buffer Memory
+
+**Definition and Purpose:** Conversation Buffer Memory is a memory type that stores and manages a history of past messages exchanged between the user and the AI. It serves as a continuous record of the conversation's flow, allowing the AI to reference previous interactions for context.
+
+**How to Use:**
+- Initialize the memory.
+- Use the `save_context` method to store incoming messages.
+- Use the `load_memory_variables` method to retrieve the conversation history.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationBufferMemory
+memory = ConversationBufferMemory()
+
+memory.save_context({"input": "Hello"}, {"output": "Hi there!"})
+memory.save_context({"input": "How's your day?"}, {"output": "It's great!"})
+
+result = memory.load_memory_variables({})
+print(result['history'])  # Output: ['Human: Hello', 'AI: Hi there!', 'Human: How's your day?', 'AI: It's great!']
+```
+
+**Q&A:**
+1. **What is the purpose of Conversation Buffer Memory?**
+   Conversation Buffer Memory stores a continuous record of past interactions, enabling the AI to reference previous messages for context.
+2. **How do you store messages in Conversation Buffer Memory?**
+   Use the `save_context` method to add incoming messages.
+3. **How can you retrieve the entire conversation history?**
+   Use the `load_memory_variables` method without any parameters.
+4. **What are the advantages of using Conversation Buffer Memory?**
+   It allows the AI to maintain context and understand the flow of the ongoing conversation.
+
+---
+
+### 2. Entity Memory
+
+**Definition and Purpose:** Entity Memory stores information about specific entities mentioned in the conversation. It enhances context-rich conversations by retaining facts about entities over time.
+
+**How to Use:**
+- Initialize the memory with a context containing entity information.
+- Use the `save_context` method to store entity-related messages.
+- Use the `load_memory_variables` method to retrieve entity information.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationEntityMemory
+from pydantic import BaseModel
+
+class Context(BaseModel):
+    Deven: str
+    Sam: str
+
+context = Context(Deven="Deven is working on a hackathon project with Sam.",
+                  Sam="Sam is working on a hackathon project with Deven.")
+memory = ConversationEntityMemory(context=context)
+
+memory.save_context({"input": "Deven & Sam are working on a project"},
+                    {"output": "That sounds interesting!"})
+
+result = memory.load_memory_variables({"input": 'who is Sam'})
+print(result['history'])  # Output: 'Human: Deven & Sam are working on a project\nAI: That sounds interesting!'
+print(result['entities']['Sam'])  # Output: 'Sam is working on a hackathon project with Deven.'
+```
+
+**Q&A:**
+1. **What is the purpose of Entity Memory?**
+   Entity Memory enhances context by retaining facts about specific entities in the conversation.
+2. **How do you initialize Entity Memory with entity information?**
+   Initialize it with a context containing entity details.
+3. **How can you save entity-related messages to the memory?**
+   Use the `save_context` method.
+4. **How do you retrieve information about a specific entity?**
+   Use the `load_memory_variables` method and access the 'entities' field.
+
+---
+
+### 3. Conversation Knowledge Graph Memory
+
+**Definition and Purpose:** Conversation Knowledge Graph Memory utilizes a knowledge graph to recreate memory. It stores messages in a structured format to capture relationships and context.
+
+**How to Use:**
+- Initialize the memory with an LLM and optionally set other parameters.
+- Use the `save_context` method to store messages in a knowledge graph format.
+- Use the `load_memory_variables` method to retrieve messages from the knowledge graph.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationKGMemory
+from langchain.llms import OpenAI
+
+llm = OpenAI(temperature=0)
+memory = ConversationKGMemory(llm=llm)
+
+memory.save_context({"input": "say hi to sam"}, {"output": "who is sam"})
+memory.save_context({"input": "sam is a friend"}, {"output": "okay"})
+
+result = memory.load_memory_variables({"input": "who is sam"})
+print(result['history'])  # Output: 'On Sam: Sam is friend.'
+```
+
+**Q&A:**
+1. **What is the purpose of Conversation Knowledge Graph Memory?**
+   Conversation KG Memory uses a knowledge graph to recreate memory for structured context.
+2. **How do you initialize Conversation KG Memory?**
+   Initialize it with
+
+ an LLM and other desired parameters.
+3. **How can you save messages in a knowledge graph format?**
+   Use the `save_context` method.
+4. **How do you retrieve messages from the knowledge graph?**
+   Use the `load_memory_variables` method.
+
+---
+
+### 4. Conversation Summary Memory
+
+**Definition and Purpose:** Conversation Summary Memory condenses conversation history into a summary that can be used to inject context into prompts/chains.
+
+**How to Use:**
+- Initialize the memory with an LLM and optionally set other parameters.
+- Use the `save_context` method to store messages.
+- Use the `load_memory_variables` method to retrieve conversation summaries.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationSummaryMemory
+from langchain.llms import OpenAI
+
+llm = OpenAI(temperature=0)
+memory = ConversationSummaryMemory(llm=llm)
+
+memory.save_context({"input": "hi"}, {"output": "whats up"})
+memory.save_context({"input": "how are you?"}, {"output": "I'm fine."})
+
+result = memory.load_memory_variables({})
+print(result['history'])  # Output: '\nThe human greets the AI, to which the AI responds.'
+```
+
+**Q&A:**
+1. **What is the purpose of Conversation Summary Memory?**
+   Conversation Summary Memory condenses conversation history for efficient recall.
+2. **How do you initialize Conversation Summary Memory?**
+   Initialize it with an LLM and other desired parameters.
+3. **How can you save messages to create conversation summaries?**
+   Use the `save_context` method.
+4. **How do you retrieve conversation summaries?**
+   Use the `load_memory_variables` method.
+
+---
+
+### 5. Vector Store-Backed Memory
+
+**Definition and Purpose:** Vector Store-Backed Memory uses vector similarity to retrieve semantically relevant documents from a store, enhancing context retrieval.
+
+**How to Use:**
+- Initialize a suitable vector store.
+- Create a retriever from the vector store.
+- Initialize Vector Store-Backed Memory with the retriever.
+- Use the `save_context` method to store memories.
+- Use the `load_memory_variables` method to retrieve memories.
+
+**Code Example:**
+
+```python
+from datetime import datetime
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.llms import OpenAI
+from langchain.memory import VectorStoreRetrieverMemory
+
+# Initialize your VectorStore (not shown here)
+
+embedding_size = 1536  # Dimensions of OpenAIEmbeddings
+# Initialize your embeddings and store (not shown here)
+
+retriever = vectorstore.as_retriever(search_kwargs=dict(k=1))
+memory = VectorStoreRetrieverMemory(retriever=retriever)
+
+memory.save_context({"prompt": "My favorite food is pizza"},
+                    {"response": "Nice choice!"})
+
+result = memory.load_memory_variables({"prompt": "tell me about pizza"})
+print(result['history'])  # Output: 'Prompt: My favorite food is pizza\nResponse: Nice choice!'
+```
+
+**Q&A:**
+1. **What is the purpose of Vector Store-Backed Memory?**
+   Vector Store-Backed Memory retrieves relevant documents using vector similarity.
+2. **How do you initialize Vector Store-Backed Memory?**
+   Initialize it with a retriever created from a suitable vector store.
+3. **How can you save memories to Vector Store-Backed Memory?**
+   Use the `save_context` method.
+4. **How do you retrieve relevant memories using Vector Store-Backed Memory?**
+   Use the `load_memory_variables` method.
+
+---
+
+### 6. Conversation Buffer Window Memory
+
+**Definition and Purpose:** Conversation Buffer Window Memory is an extension of Conversation Buffer Memory. It limits the context window to a specific number of previous interactions, ensuring that the most relevant context is maintained.
+
+**How to Use:**
+- Initialize the memory with a maximum buffer size.
+- Use the `save_context` method to store incoming messages.
+- Automatically remove older messages beyond the buffer window.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationBufferWindowMemory
+memory = ConversationBufferWindowMemory(max_buffer_size=4)
+
+memory.save_context({"input": "Hello"}, {"output": "Hi there!"})
+memory.save_context({"input": "How's your day?"}, {"output": "It's great!"})
+
+result = memory.load_memory_variables({})
+print(result['history'])  # Output: ['Human: Hello', 'AI: Hi there!', 'Human: How's your day?', 'AI: It's great!']
+```
+
+**Q&A:**
+1. **What is the purpose of Conversation Buffer Window Memory?**
+   Conversation Buffer Window Memory maintains a limited context window to prioritize recent interactions.
+2. **How do you set the maximum buffer size for the window?**
+   Initialize the memory with the `max_buffer_size` parameter.
+3. **How can you save incoming messages to the window memory?**
+   Use the `save_context` method.
+4. **How does Conversation Buffer Window Memory handle older messages?**
+   It automatically removes older messages once the buffer size is exceeded.
+
+---
+
+### 7. ConversationSummaryBufferMemory
+
+**Definition and Purpose:** ConversationSummaryBufferMemory is an extended version of Conversation Summary Memory. It enables the creation of summarized conversation history with a limited buffer window.
+
+**How to Use:**
+- Initialize the memory with an LLM and maximum buffer size.
+- Use the `save_context` method to store messages.
+- Automatically condense conversation history into a summary while retaining recent interactions.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain.llms import OpenAI
+
+llm = OpenAI(temperature=0)
+memory = ConversationSummaryBufferMemory(llm=llm, max_buffer_size=5)
+
+memory.save_context({"input": "Nice weather today"}, {"output": "Indeed, it's beautiful!"})
+memory.save_context({"input": "What's the plan?"}, {"output": "Thinking of going for a hike."})
+
+result = memory.load_memory_variables({})
+print(result['history'])  # Output: '\nThe human comments on the weather, and the AI agrees.'
+```
+
+**Q&A:**
+1. **What is the purpose of ConversationSummaryBufferMemory?**
+   ConversationSummaryBufferMemory creates condensed summaries of conversation history within a limited buffer window.
+2. **How do you initialize ConversationSummaryBufferMemory?**
+   Initialize it with an LLM and maximum buffer size.
+3. **How can you save messages to generate conversation summaries?**
+   Use the `save_context` method.
+4. **How does ConversationSummaryBufferMemory handle older messages?**
+   It automatically maintains a summary while accommodating recent interactions.
+
+---
+
+### 8. ConversationTokenBufferMemory
+
+**Definition and Purpose:** ConversationTokenBufferMemory stores conversation tokens, enabling precise retrieval of specific parts of the conversation, including individual tokens and sub-conversations.
+
+**How to Use:**
+- Initialize the memory.
+- Use the `save_context` method to store incoming messages.
+- Use the `load_memory_variables` method with token indices to retrieve specific conversation segments.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationTokenBufferMemory
+memory = ConversationTokenBufferMemory()
+
+memory.save_context({"input": "Tell me a joke"}, {"output": "Why did the chicken cross the road?"})
+memory.save_context({"input": "I don't know, why?"}, {"output": "To get to the other side!"})
+
+token_indices = [0, 1, 2]  # Indices corresponding to the first message
+result = memory.load_memory_variables({"token_indices": token_indices})
+print(result['history'])  # Output: ['Human: Tell me a joke', 'AI: Why did the chicken cross the road?']
+```
+
+**Q&A:**
+1. **What is the purpose of ConversationTokenBufferMemory?**
+   ConversationTokenBufferMemory stores conversation tokens for precise retrieval of specific conversation segments.
+2. **How do you save conversation tokens to the memory?**
+   Use the `save_context` method.
+3. **How do you retrieve specific parts of the conversation using token indices?**
+   Use the `load_memory_variables` method with the 'token_indices' parameter.
+
+---
