@@ -97,7 +97,11 @@ if prompt := st.chat_input():
 
         chain = LLMChain(prompt=prompt_template, llm=model)
 
-        response = chain({"input": prompt, "chat_history": st.session_state.messages[-20:]}, include_run_info=True)
+        response = chain(
+            {"input": prompt, "chat_history": st.session_state.messages[-20:]},
+            include_run_info=True,
+            tags=[lesson_selection]
+        )
         st.session_state.messages.append(HumanMessage(content=prompt))
         st.session_state.messages.append(AIMessage(content=response[chain.output_key]))
         run_id = response["__run"].run_id
