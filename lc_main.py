@@ -28,42 +28,48 @@ class StreamHandler(BaseCallbackHandler):
         self.text += token
         self.container.markdown(self.text)
 
-# Load guides
-with open("guide.txt", "r") as f:
-    guide = f.read()
-with open("lc_guides/prompt_guide.txt", "r") as f:
-    prompt_guide = f.read()
-with open("lc_guides/models_guide.txt", "r") as f:
-    models_guide = f.read()
-with open("lc_guides/memory_guide.txt", "r") as f:
-    memory_guide = f.read()
+# Lesson selection dictionary
+lesson_guides = {
+    "Lesson 1: Getting Started with LangChain": {
+        "file": "lc_guides/getting_started_guide.txt",
+        "description": "This lesson covers the basics of getting started with LangChain."
+    },
+    "Lesson 2: Prompts": {
+        "file": "lc_guides/prompt_guide.txt",
+        "description": "This lesson focuses on prompts and their usage."
+    },
+    "Lesson 3: Language Models": {
+        "file": "lc_guides/models_guide.txt",
+        "description": "This lesson provides an overview of language models."
+    },
+    "Lesson 4: Memory": {
+        "file": "lc_guides/memory_guide.txt",
+        "description": "This lesson is about Memory."
+    },
+    "Lesson 5: Chains": {
+        "file": "lc_guides/chains_guide.txt",
+        "description": "This lesson provides information on Chains in LangChain, their types, and usage."
+    },
+    "Lesson 6: Retrieval": {
+        "file": "lc_guides/retrieval_guide.txt",
+        "description": "This lesson provides information on indexing and retrieving information using LangChain."
+    },
+    "Lesson 7: Agents": {
+        "file": "lc_guides/agents_guide.txt",
+        "description": "This lesson provides information on agents, tools, and toolkits."
+    }
+}
 
 # Initialize LangSmith client
 client = Client()
 
 # Lesson selection sidebar
-lesson_selection = st.sidebar.selectbox("Select Lesson", [
-    "Lesson 1: Getting Started with LangChain",
-    "Lesson 2: Prompts",
-    "Lesson 3: Language Models",
-    "Lesson 4: Memory"
-])
+lesson_selection = st.sidebar.selectbox("Select Lesson", list(lesson_guides.keys()))
 
 # Display lesson content and description based on selection
-if lesson_selection == "Lesson 1: Getting Started with LangChain":
-    lesson_content = guide
-    lesson_description = "This lesson covers the basics of getting started with LangChain."
-elif lesson_selection == "Lesson 2: Prompts":
-    lesson_content = prompt_guide
-    lesson_description = "This lesson focuses on prompts and their usage."
-elif lesson_selection == "Lesson 3: Language Models":
-    lesson_content = models_guide
-    lesson_description = "This lesson provides an overview of language models."
-else:
-    lesson_content = memory_guide
-    lesson_description = "This lesson is about Memory."
-
-prompt_template = load_prompt(content=lesson_content)
+lesson_info = lesson_guides[lesson_selection]
+lesson_content = open(lesson_info["file"], "r").read()
+lesson_description = lesson_info["description"]
 
 # Radio buttons for lesson type selection
 lesson_type = st.sidebar.radio("Select Lesson Type", ["Instructions based lesson", "Interactive lesson with questions"])
@@ -93,14 +99,19 @@ if prompt := st.chat_input():
 
     with st.chat_message("assistant"):
         stream_handler = StreamHandler(st.empty())
-        model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-3.5-turbo")
+        model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-3.5-turbo-16k")
+
+        if lesson_type == "Instructions based lesson":
+            prompt_template = load_prompt(content=lesson_content)
+        else:
+            prompt_template = load_prompt_with_questions(content=lesson_content)
 
         chain = LLMChain(prompt=prompt_template, llm=model)
 
         response = chain(
             {"input": prompt, "chat_history": st.session_state.messages[-20:]},
             include_run_info=True,
-            tags=[lesson_selection]
+            tags=[lesson_selection, lesson_type]
         )
         st.session_state.messages.append(HumanMessage(content=prompt))
         st.session_state.messages.append(AIMessage(content=response[chain.output_key]))

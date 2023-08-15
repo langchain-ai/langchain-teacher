@@ -1,0 +1,344 @@
+
+## Agents in LangChain
+
+### Introduction
+
+Welcome to the comprehensive lesson on Agents in LangChain. In this guide, we'll delve deep into the world of agents, their role in enhancing the capabilities of Large Language Models (LLMs), and how to effectively utilize them within the LangChain library.
+
+#### What are Agents?
+
+Agents are intelligent entities designed to leverage the power of language models to make decisions, execute actions, and perform various tasks based on reasoning. Unlike traditional programming, where actions are hardcoded, agents dynamically choose actions and their order of execution using language models. This lesson will cover a wide range of topics related to agents in LangChain, including their components, types, tools, and execution.
+
+### Components of an Agent
+
+Agents in LangChain are composed of several key components that collectively enable them to operate effectively and make informed decisions.
+
+#### The Agent Core
+
+The agent core is the central component responsible for making decisions on actions to take. It's powered by a language model and a prompt that includes the agent's personality, background context, and prompting strategies like ReAct. This enables agents to respond in a desired manner and enhances their reasoning abilities.
+
+**Code Example:**
+
+```python
+from langchain.chat_models import ChatOpenAI
+
+# Initialize the language model
+llm = ChatOpenAI(temperature=0)
+
+# Create a prompt for the agent
+from langchain.schema import SystemMessage
+from langchain.agents import OpenAIFunctionsAgent
+from langchain.agents import tool
+
+from langchain.agents import tool
+
+@tool
+def get_word_length(word: str) -> int:
+    """Returns the length of a word."""
+    return len(word)
+
+tools = [get_word_length]
+system_message = SystemMessage(content="You are a helpful assistant with a specific expertise.")
+prompt = OpenAIFunctionsAgent.create_prompt(system_message=system_message)
+agent = OpenAIFunctionsAgent(llm=llm, tools=tools, prompt=prompt)
+```
+
+#### Tools and Toolkits
+
+Tools are essential for agents to interact with the environment effectively. They can access the right tools and understand their usage based on effective descriptions. Toolkits are groups of related tools that work together to accomplish specific objectives.
+
+**Code Example:**
+
+```python
+from langchain.agents import tool
+
+@tool
+def calculate_square(number: float) -> float:
+    """Calculate the square of a number."""
+    return number * number
+```
+
+**Question:**
+- How do tools and toolkits contribute to an agent's ability to perform tasks effectively?
+
+#### AgentExecutor
+
+The AgentExecutor is the runtime environment where agents operate and execute actions. It processes agent decisions and handles complexities such as errors, logging, and ensuring smooth execution.
+
+**Code Example:**
+
+```python
+from langchain.agents import AgentExecutor
+
+agent_executor = AgentExecutor(agent=agent, tools=[calculate_square], verbose=True)
+```
+
+**Question:**
+- What is the role of AgentExecutor in the execution of agent actions?
+
+
+---
+
+### Step-by-Step Guide: Building an Agent in LangChain
+
+Building an agent in LangChain involves defining its components, choosing the right tools, and configuring its behavior. Here's a comprehensive guide to help you create a functional agent that can perform specific tasks using LangChain's capabilities.
+
+#### Step 1: Define the Objective
+
+**Start by identifying the specific tasks or objectives your agent needs to achieve.** This will help you determine the tools and toolkits required to accomplish these tasks effectively.
+
+**Example Objective:** Build an agent that can perform mathematical calculations and provide the results.
+
+#### Step 2: Choose the Base Language Model (LLM)
+
+**Select a base language model (LLM) that suits your agent's requirements.** The LLM forms the foundation of your agent's language understanding and generation capabilities.
+
+**Example:**
+```python
+from langchain import OpenAI
+
+llm = OpenAI(
+    openai_api_key="YOUR_API_KEY",
+    temperature=0.7,
+    model_name="text-davinci-003"
+)
+```
+
+#### Step 3: Define Tools
+
+**Create tools that encapsulate specific functionalities required for your agent.** Define functions that correspond to these tools and decorate them with `@tool` to make them accessible to the agent.
+
+**Example Tools:**
+
+```python
+from langchain.agents import tool
+
+@tool
+def calculator(operation: str, num1: float, num2: float) -> float:
+    """Perform arithmetic operations."""
+    if operation == 'add':
+        return num1 + num2
+    elif operation == 'subtract':
+        return num1 - num2
+    elif operation == 'multiply':
+        return num1 * num2
+    elif operation == 'divide':
+        return num1 / num2
+```
+
+#### Step 4: Create a Prompt
+
+**Design a prompt that sets the context and behavior for your agent's responses.** The prompt can include the agent's personality, background information, and any specific instructions.
+
+**Example:**
+```python
+from langchain.schema import SystemMessage
+from langchain.agents import OpenAIFunctionsAgent
+
+system_message = SystemMessage(content="You are a mathematical assistant. Help users with calculations.")
+prompt = OpenAIFunctionsAgent.create_prompt(system_message=system_message)
+```
+
+#### Step 5: Initialize the Agent
+
+**Initialize your agent using the base LLM, tools, and the created prompt.** This step creates an instance of the agent that can execute tasks using the specified tools.
+
+**Example:**
+```python
+from langchain.agents import AgentExecutor
+
+agent = OpenAIFunctionsAgent(llm=llm, tools=[calculator], prompt=prompt)
+agent_executor = AgentExecutor(agent=agent, tools=[calculator], verbose=True)
+```
+
+#### Step 6: Run and test the Agent
+
+**Run and test your agent by providing input and observing its responses.** This step helps you verify that the agent's behavior aligns with your intended objectives.
+
+**Example:**
+```python
+input_query = "Calculate the result of (5 * 3) + 7"
+result = agent_executor.run(input_query)
+print(result)  # Output: "The result is 22."
+```
+
+#### Step 7: Customize and Iterate
+
+**Refine and customize your agent's behavior based on test results and user interactions.** Tweak the prompt, tools, and other components as needed to enhance the agent's performance and accuracy.
+
+**Question:**
+- What is the purpose of defining tools when building an agent in LangChain?
+
+---
+
+### Agent Types
+
+LangChain supports multiple agent runtimes, each catering to specific use cases and offering different ways to implement agents effectively.
+
+#### Plan-and-Execute Agent
+
+Plan-and-execute agents first plan a sequence of actions and then execute subtasks to achieve an objective. This approach is inspired by the BabyAGI and Plan-and-Solve concepts.
+
+```python
+from langchain.chat_models import ChatOpenAI
+from langchain_experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
+from langchain.llms import OpenAI
+from langchain.agents import load_tools
+
+llm = OpenAI(temperature=0)
+tools = load_tools(["serpapi", "llm-math"], llm=llm)
+model = ChatOpenAI(temperature=0)
+planner = load_chat_planner(model)
+executor = load_agent_executor(model, tools, verbose=True)
+agent = PlanAndExecute(planner=planner, executor=executor, verbose=True)
+agent.run("Who is Leo DiCaprio's girlfriend? What is her current age raised to the 0.43 power?")
+```
+
+
+#### Zero-Shot ReAct
+
+Zero-shot agents utilize the ReAct framework to choose tools based solely on tool descriptions. This type of agent is versatile and doesn't require memory for multi-step tasks.
+
+**Code Example:**
+
+```python
+from langchain.agents import load_tools
+from langchain.agents import initialize_agent
+from langchain.agents import AgentType
+from langchain.llms import OpenAI
+llm = OpenAI(temperature=0)
+tools = load_tools(["serpapi", "llm-math"], llm=llm)
+agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
+agent.run("Who is Leo DiCaprio's girlfriend? What is her current age raised to the 0.43 power?")
+```
+
+#### Conversational ReAct
+
+Conversational agents use the ReAct framework for multi-turn conversations and retain memory of previous interactions. This is particularly useful for chatbot-like interactions.
+
+**Code Example:**
+
+```python
+from langchain.memory import ConversationBufferMemory
+
+memory = ConversationBufferMemory(memory_key="chat_history")
+conversational_agent = initialize_agent(
+    agent='conversational-react-description',
+    tools=[calculate_square],
+    llm=llm,
+    verbose=True,
+    max_iterations=3,
+    memory=memory
+)
+```
+
+**Question:**
+- How does the Zero-Shot ReAct agent choose tools based on their descriptions?
+
+**Question:**
+- How does the provided code snippet create an agent that calculates the factorial of a number?
+
+#### ReAct Docstore Agent
+
+The ReAct document store agent specializes in searching and retrieving information from documents stored within LangChain's docstore. It's particularly useful for performing information searches.
+
+**Code Example:**
+
+```python
+from langchain.docstore import DocStoreMemory
+
+docstore_memory = DocStoreMemory(
+    docstore_key="stock_data",
+    docstore_path="./docstore.json"
+)
+
+docstore_agent = initialize_agent(
+    agent='react-docstore',
+    tools=tools,
+    llm=llm,
+    verbose=True,
+    max_iterations=3,
+    docstore_memory=docstore_memory
+)
+```
+
+**Question:**
+- How does the ReAct Docstore Agent interact with LangChain's document store to retrieve information?
+
+
+
+### Tools and Toolkits
+
+In the realm of LangChain, tools play a pivotal role in enabling agents to interact with the environment, perform tasks, and achieve their objectives. Tools define the capabilities of an agent and provide a structured way for the agent to access and utilize various functionalities. Let's delve deeper into the concept of tools and how they contribute to the effectiveness of LangChain agents.
+
+#### Understanding Tools
+
+**Tools are functions or methods that agents can utilize to perform specific tasks.** These tasks can range from simple calculations to complex interactions with external systems. Each tool encapsulates a particular piece of functionality and is associated with a name, a description, and the underlying implementation.
+
+**Example:**
+Consider a scenario where an agent needs to perform basic math calculations. We can create a tool named "Calculator" that performs arithmetic operations.
+
+```python
+from langchain.agents import tool
+
+@tool
+def calculator(operation: str, num1: float, num2: float) -> float:
+    """Perform arithmetic operations."""
+    if operation == 'add':
+        return num1 + num2
+    elif operation == 'subtract':
+        return num1 - num2
+    elif operation == 'multiply':
+        return num1 * num2
+    elif operation == 'divide':
+        return num1 / num2
+```
+
+#### Toolkits: Organizing Tools
+
+**Toolkits are collections of related tools grouped together to achieve specific objectives.** They provide a higher-level abstraction, making it easier to manage and organize tools with similar functionalities. Toolkits enhance the modularity and reusability of an agent's components.
+
+**Example:**
+Imagine an agent designed for financial calculations. We can create a toolkit named "Financial Toolkit" containing tools for performing calculations related to investments, currency conversions, and interest rates.
+
+```python
+from langchain.agents import Toolkit
+
+financial_toolkit = Toolkit(name="Financial Toolkit", tools=[investment_calculator, currency_converter, interest_calculator])
+```
+
+**Question:**
+- How do tools contribute to the functionality of LangChain agents?
+
+#### Extending Agent Capabilities with Tools and Toolkits
+
+When building an agent, developers can choose from a variety of built-in tools or create custom tools to suit their specific needs. By selecting and organizing tools into toolkits, developers can effectively extend the agent's capabilities and enhance its ability to perform diverse tasks.
+
+**Code Example:**
+
+```python
+# Creating custom tools
+@tool
+def search_engine(query: str) -> str:
+    """Perform a web search."""
+    # Use an external library or API to execute the search
+    search_result = external_search_engine(query)
+    return search_result
+
+@tool
+def email_sender(subject: str, content: str, recipient: str) -> str:
+    """Send an email."""
+    # Use an email API to send the email
+    email_api.send_email(subject, content, recipient)
+    return f"Email sent to {recipient}"
+
+# Creating a toolkit
+communication_toolkit = Toolkit(name="Communication Toolkit", tools=[search_engine, email_sender])
+```
+
+By combining tools and organizing them into toolkits, developers can enhance the agent's functionality and enable it to interact with the environment more effectively.
+
+### Conclusion
+
+Agents in LangChain open up a world of possibilities by leveraging language models and tools to make intelligent decisions and perform complex tasks. Their adaptability and customization options make them invaluable for a wide range of applications. By combining agents, tools, and runtime environments effectively, developers can create sophisticated systems capable of handling diverse tasks with ease.
+

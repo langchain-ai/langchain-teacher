@@ -1,0 +1,169 @@
+Here is a consolidated lesson on Retrieval Augmented Generation in Langchain with sections, questions, answers, and code examples:
+
+# Retrieval Augmented Generation in Langchain
+
+## Introduction
+
+Retrieval augmented generation (RAG) refers to combining large language models with external knowledge sources to improve their capabilities. In RAG, the LLM retrieves relevant information from a knowledge base to inform its response to a given prompt or question. This helps reduce hallucination and improve accuracy. 
+
+Langchain provides tools for implementing retrieval augmented generation by allowing easy integration of external knowledge sources. Let's learn how it works.
+
+**Q: What is retrieval augmented generation?**
+
+A: Retrieval augmented generation refers to combining a large language model with an external knowledge source to improve the accuracy and reduce hallucination in the LLM's responses. The LLM retrieves relevant information from the knowledge source to inform its response to prompts and questions.
+
+**Q: Why is retrieval augmentation useful for large language models?**
+
+A: Retrieval augmentation is useful because LLMs have limited knowledge based on what they were trained on. By combining them with external knowledge sources, we can provide them with up-to-date, relevant information to ground their responses in facts rather than hallucinations. This improves accuracy.
+
+## Knowledge Sources
+
+The first step in implementing RAG is selecting and integrating external knowledge sources. Langchain supports integrating diverse knowledge sources:
+
+- **Documents:** Text, PDFs, HTML pages, etc.
+- **Structured data:** SQL tables, Pandas dataframes, etc. 
+- **APIs:** Web APIs can be wrapped as knowledge sources.
+
+Langchain provides utilities for loading data from each of these sources and converting them into a standard `Document` format that can be used downstream.
+
+**Q: What kinds of knowledge sources can be integrated with Langchain?**
+
+A: Langchain supports integrating diverse knowledge sources including unstructured text documents, structured data like SQL tables and Pandas dataframes, and web APIs. These sources can be loaded and converted into Langchain's standard Document format.
+
+**Q: How does Langchain convert diverse sources into a standard format?** 
+
+A: Langchain provides DocumentLoaders to load each type of source and convert it into the standard Document format which contains the text content and metadata. This abstraction allows seamlessly integrating diverse sources.
+
+## Working with Documents
+
+Unstructured text documents are a common knowledge source. Let's see how to work with documents in Langchain.
+
+### Loading Documents
+
+Langchain provides `DocumentLoaders` to load documents from files, web pages, Google Drive, etc. For example:
+
+```python
+from langchain.document_loaders import TextLoader
+
+loader = TextLoader("data.txt")
+docs = loader.load() 
+```
+
+**Q: How do you load unstructured text documents in Langchain?**
+
+A: Langchain provides DocumentLoaders like TextLoader to load text documents from files, webpages, Google Drive, etc. The DocumentLoaders expose a load() method to load the data and return a list of Document objects.
+
+### Splitting Documents
+
+Large documents should be split into smaller chunks before feeding to the LLM. Langchain provides `TextSplitters` for this:
+
+```python
+from langchain.text_splitter import RecursiveCharacterTextSplitter 
+
+splitter = RecursiveCharacterTextSplitter() 
+docs = splitter.split_documents(docs)
+```
+
+**Q: Why is it important to split text documents before using them for retrieval?**
+
+A: Large documents need to be split into smaller chunks so that they can fit into the LLM's limited context window. Smaller chunks also allow more focused, relevant retrieval for a given query. Langchain provides TextSplitters to split documents into chunks.
+
+### Embedding Documents
+
+To retrieve documents for a query, we need to represent them in a vector space using embeddings. Langchain provides `Embeddings` for this:
+
+```python
+from langchain.embeddings import OpenAIEmbeddings
+
+embedder = OpenAIEmbeddings()
+embeds = embedder.embed_documents(docs) 
+```
+
+Now the documents are encoded as vectors ready for retrieval.
+
+**Q: How does Langchain generate vector embeddings for text documents?**
+
+A: Langchain provides Embeddings models like OpenAIEmbeddings to generate vector representations of text documents. These embedding vectors allow computing semantic similarity between pieces of text for retrieval.
+
+## Vector Databases
+
+To perform efficient retrieval over a large corpus, the document vectors need to be indexed in a vector database. Langchain provides utilities for working with vector databases.
+
+### Creating the Index
+
+A vector database index can be created from embedded documents like:
+
+```python
+from langchain.vectorstores import FAISS
+
+vectorstore = FAISS()
+vectorstore.add_documents(embeds)
+```
+
+**Q: How do you create a vector database index in Langchain?**
+
+A: A vector database index can be created by first embedding documents using an Embeddings model and then passing the document vectors to a VectorStore like FAISS. The VectorStore will create the index from the vectors.
+
+### Querying the Index
+
+Once indexed, we can perform efficient semantic search over the vectors:
+
+```python
+docs = vectorstore.similarity_search("fix my computer") 
+```
+
+This retrieves the most similar document vectors to the query.
+
+**Q: How can you retrieve documents from a vector database index?**
+
+A: The VectorStore provides a similarity_search method to query the index and return the most similar document vectors to a query string or embedding vector. This enables fast semantic search over the indexed documents.
+
+## Building Chains
+
+Langchain provides chain abstractions that combine the knowledge source with LLMs to enable retrieval augmented generation.
+
+### RetrievalQA
+
+The `RetrievalQA` chain performs question answering using retrieved documents:
+
+```python
+from langchain.chains import RetrievalQA
+from langchain.llms import OpenAI
+
+llm = OpenAI()
+retriever = vectorstore.as_retriever()
+qa_chain = RetrievalQA(llm, retriever)
+
+qa_chain.run("when was langchain created?")
+```
+
+**Q: How can you build a question answering system using retrieved documents in Langchain?**
+
+A: The RetrievalQA chain combines a retriever over documents with a QA-capable LLM like OpenAI to perform question answering using retrieved information. It automatically retrieves relevant documents for a question and has the LLM answer based on those.
+
+### ConversationalQA
+
+For dialog, `ConversationalQA` incorporates conversation history: 
+
+```python
+from langchain.chains import ConversationalQA
+
+conv_qa = ConversationalQA(llm, retriever) 
+
+conv_qa("what is langchain?", "Langchain is an AI assistant created by Anthropic.")
+```
+
+**Q: How does Langchain support multi-turn conversational question answering?**
+
+A: The ConversationalQA chain maintains conversation state and incorporates it into queries to the retriever and LLM at each turn. This enables multi-turn QA where context from earlier in the conversation is used.
+
+## Conclusion
+
+In this lesson, we looked at how Langchain implements retrieval augmented generation by:
+
+- Supporting diverse knowledge sources 
+- Providing utilities for working with documents
+- Building vector databases for retrieval
+- Creating chains that connect retrievers and LLMs
+
+With these building blocks, you can augment any LLM with external knowledge to reduce hallucination and improve accuracy!
