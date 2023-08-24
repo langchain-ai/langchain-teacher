@@ -3,10 +3,9 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from langsmith import Client
 from langchain.callbacks.base import BaseCallbackHandler
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import LLMChain
-from get_prompt import load_prompt, load_prompt_with_questions
+from langchain.chains import LLMChain, SequentialChain
+from get_prompt import load_prompt, load_prompt_with_questions, load_supervision_prompt
+
 
 st.set_page_config(page_title="LangChain: Getting Started Class", page_icon="🦜")
 st.title("🦜 LangChain: Getting Started Class")
@@ -78,7 +77,7 @@ lesson_type = st.sidebar.radio("Select Lesson Type", ["Instructions based lesson
 if st.session_state.get("current_lesson") != lesson_selection or st.session_state.get("current_lesson_type") != lesson_type:
     st.session_state["current_lesson"] = lesson_selection
     st.session_state["current_lesson_type"] = lesson_type
-    st.session_state["messages"] = [AIMessage(content="Welcome! This short course will help you get started with LangChain.")]
+    st.session_state["messages"] = [AIMessage(content="Welcome! This short course will help you get started with LangChain. Let me know when you're all set to jump in!")]
 
 # Display lesson name and description
 st.markdown(f"**{lesson_selection}**")
@@ -99,22 +98,37 @@ if prompt := st.chat_input():
 
     with st.chat_message("assistant"):
         stream_handler = StreamHandler(st.empty())
-        model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-3.5-turbo-16k")
+        teacher_model = ChatOpenAI(model="gpt-3.5-turbo-16k")
+        supervisor_model = ChatOpenAI(streaming=True, callbacks=[stream_handler], model="gpt-3.5-turbo")
 
         if lesson_type == "Instructions based lesson":
             prompt_template = load_prompt(content=lesson_content)
+            teachers_instructions = load_prompt(content="sample content")
         else:
             prompt_template = load_prompt_with_questions(content=lesson_content)
+            teachers_instructions = load_prompt(content="sample content")
 
-        chain = LLMChain(prompt=prompt_template, llm=model)
+        teacher_chain = LLMChain(prompt=prompt_template, llm=teacher_model, output_key="previous_response")
 
-        response = chain(
-            {"input": prompt, "chat_history": st.session_state.messages[-20:]},
+   
+        combined_prompt_template = load_supervision_prompt()
+        test_prompt = combined_prompt_template.format_prompt( previous_response=teacher_chain.output_key, input=prompt, teachers_instructions=teachers_instructions).to_messages()
+        supervisor_chain = LLMChain(prompt=combined_prompt_template, llm=supervisor_model, output_key="final_response")
+
+        overall_chain = SequentialChain(
+            chains=[teacher_chain, supervisor_chain],
+            input_variables=["input", "chat_history", "teachers_instructions"],
+            verbose=False
+        )
+
+        response = overall_chain(
+            {"input": prompt, "chat_history": st.session_state.messages[-20:],"teachers_instructions":teachers_instructions },
             include_run_info=True,
             tags=[lesson_selection, lesson_type]
-        )
+            )
+
         st.session_state.messages.append(HumanMessage(content=prompt))
-        st.session_state.messages.append(AIMessage(content=response[chain.output_key]))
+        st.session_state.messages.append(AIMessage(content=response['final_response']))
         run_id = response["__run"].run_id
 
         col_blank, col_text, col1, col2 = st.columns([10, 2, 1, 1])
