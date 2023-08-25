@@ -17,7 +17,12 @@ def load_prompt(content):
 	This is an interactive lesson - do not lecture them, but rather engage and guide them along!
 	-----------------
 
-	{content}""".format(content=content)
+	{content}
+	
+	-----------------
+	End of Content.
+
+	Now remember short response with only 1 code snippet per message.""".format(content=content)
 
 	prompt_template = ChatPromptTemplate(messages = [
 		SystemMessage(content=template), 
@@ -43,11 +48,15 @@ def load_prompt_with_questions(content):
 	Only include 1 code snippet per message - make sure they can run that before giving them any more. \
 	Make sure they fully understand that before moving on to the next. \
 	This is an interactive lesson - do not lecture them, but rather engage and guide them along!\
-	Ask them many questions at each step and grade their response, only proceed if their understanding \
-	is above 70%
 	-----------------
 
-	{content}""".format(content=content)
+	{content}
+
+
+	-----------------
+	End of Content.
+
+	Now remember short response with only 1 code snippet per message and ask question to test users knowledge right away.""".format(content=content)
 
 	prompt_template = ChatPromptTemplate(messages = [
 		SystemMessage(content=template), 
