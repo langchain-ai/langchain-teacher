@@ -56,7 +56,7 @@ def load_prompt_with_questions(content):
 	-----------------
 	End of Content.
 
-	Now remember short response with only 1 code snippet per message and ask question to test users knowledge right away.""".format(content=content)
+	Now remember short response with only 1 code snippet per message and ask questions to test user knowledge right after every short lesson.""".format(content=content)
 
 	prompt_template = ChatPromptTemplate(messages = [
 		SystemMessage(content=template), 
