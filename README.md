@@ -1,6 +1,8 @@
 
 # LangChain-Teacher
 
+![app screenshot](app_screenshot.png)
+
 ## Description
 
 LangChain-Teacher's goal is to facilitate interactive learning of LangChain, enabling users to begin with the Python-based LangChain through a chat-based learning interface. The app offers two teaching styles: Instructional, which provides step-by-step instructions, and Interactive lessons with questions, which prompts users with questions to assess their understanding.
