@@ -7,7 +7,7 @@
 
 LangChain-Teacher's goal is to facilitate interactive learning of LangChain, enabling users to begin with the Python-based LangChain through a chat-based learning interface. The app offers two teaching styles: Instructional, which provides step-by-step instructions, and Interactive lessons with questions, which prompts users with questions to assess their understanding.
 
-The hosted version of the app is on Streamlit Cloud at [langchain-teacher.streamlit.app](https://langchain-teacher.streamlit.app/)
+The hosted version of the app is on Streamlit Cloud at [lang-teacher.streamlit.app](https://lang-teacher.streamlit.app/)
 
 ## How Does This Work?
 
