@@ -65,7 +65,7 @@ This Streamlit app guides users through lessons using a chat-based interface. To
 
    If using `dotenv` to manage environment variables, use the following command:
    ```
-   dotenv streamlit run lc_main.py
+   dotenv run -- streamlit run lc_main.py
    ```
    
 ## Additional Files and Branches
