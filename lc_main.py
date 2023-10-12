@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
@@ -7,6 +8,12 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, HumanMess
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import LLMChain
 from get_prompt import load_prompt, load_prompt_with_questions
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+# Now you can access the API key like this
+api_key = os.getenv("OPENAI_API_KEY")
 
 st.set_page_config(page_title="LangChain: Getting Started Class", page_icon="🦜")
 st.title("🦜 LangChain: Getting Started Class")
