@@ -1,5 +1,5 @@
 openai
-langchain
+langchain>=0.0.315
 streamlit
 anthropic
 pydantic<2
